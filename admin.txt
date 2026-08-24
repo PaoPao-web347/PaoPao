@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跑跑幫｜老闆正式報價系統</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#111;
+    color:#222;
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;
+}
+
+.container{
+    max-width:550px;
+    margin:auto;
+    padding:20px;
+}
+
+.header{
+    background:#ff7800;
+    color:white;
+    padding:25px;
+    border-radius:20px;
+    text-align:center;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:18px;
+    margin-top:15px;
+}
+
+label{
+    display:block;
+    font-weight:bold;
+    margin:12px 0 7px;
+}
+
+input,select{
+    width:100%;
+    padding:13px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    margin-top:15px;
+    border:0;
+    border-radius:12px;
+    background:#ff7800;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.result{
+    display:none;
+}
+
+.mainPrice{
+    text-align:center;
+    background:#fff3e8;
+    padding:25px;
+    border-radius:15px;
+}
+
+.mainPrice small{
+    display:block;
+}
+
+.mainPrice strong{
+    display:block;
+    color:#ff7800;
+    font-size:42px;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    padding:13px 0;
+    border-bottom:1px solid #eee;
+}
+
+.profit{
+    background:#f1f1f1;
+    padding:18px;
+    margin-top:15px;
+    border-radius:12px;
+}
+
+.profit strong{
+    font-size:25px;
+}
+
+.copy{
+    background:#222;
+}
+
+.note{
+    font-size:13px;
+    color:#777;
+    line-height:1.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+    <h1>🔐 跑跑幫</h1>
+    <p>老闆正式報價系統</p>
+</div>
+
+<div class="card">
+
+<label>📍 出發地</label>
+<input id="start" placeholder="輸入出發地">
+
+<label>📍 目的地</label>
+<input id="end" placeholder="輸入目的地">
+
+<label>🛣️ 實際配送距離</label>
+<input id="km" type="number" min="0" step="0.1">
+
+<label>📦 貨物類型</label>
+
+<select id="goods">
+<option value="normal">一般貨物</option>
+<option value="large">大型貨物</option>
+<option value="heavy">重型／特殊貨物</option>
+</select>
+
+<label>⚙️ 特殊服務</label>
+
+<label>
+<input type="checkbox" id="night">
+夜間 +50
+</label>
+
+<label>
+<input type="checkbox" id="rain">
+惡劣天氣 +50
+</label>
+
+<label>
+<input type="checkbox" id="waiting">
+等候 +50
+</label>
+
+<label>
+<input type="checkbox" id="buying">
+代買 +100
+</label>
+
+<button onclick="calculate()">
+產生正式報價
+</button>
+
+</div>
+
+<div class="card result" id="result">
+
+<div class="mainPrice">
+
+<small>客戶正式價格</small>
+
+<strong id="customer">$0</strong>
+
+</div>
+
+<div class="row">
+<span>配送距離</span>
+<strong id="showKm">0 km</strong>
+</div>
+
+<div class="row">
+<span>基本配送費</span>
+<strong id="base">$0</strong>
+</div>
+
+<div class="row">
+<span>特殊費用</span>
+<strong id="extra">$0</strong>
+</div>
+
+<div class="row">
+<span>司機所得</span>
+<strong id="driver">$0</strong>
+</div>
+
+<div class="profit">
+
+<div>跑跑幫平台收入</div>
+
+<strong id="platform">$0</strong>
+
+<br><br>
+
+<div>平台毛利率</div>
+
+<strong id="margin">0%</strong>
+
+</div>
+
+<button class="copy" onclick="copyQuote()">
+📋 複製正式報價
+</button>
+
+<p class="note">
+※ 本頁計算結果為跑跑幫正式報價標準。<br>
+※ 實際訂單如有特殊情況，可由老闆人工調整。
+</p>
+
+</div>
+
+</div>
+
+<script>
+
+function basePrice(km){
+
+    if(km <= 3) return 200;
+    if(km <= 5) return 250;
+    if(km <= 8) return 300;
+    if(km <= 10) return 350;
+    if(km <= 15) return 450;
+    if(km <= 20) return 550;
+    if(km <= 25) return 650;
+    if(km <= 30) return 750;
+
+    return 750 + Math.ceil(km-30)*25;
+}
+
+function driverPrice(km){
+
+    if(km <= 3) return 70;
+    if(km <= 5) return 90;
+    if(km <= 8) return 110;
+    if(km <= 10) return 130;
+    if(km <= 15) return 170;
+    if(km <= 20) return 210;
+    if(km <= 25) return 250;
+    if(km <= 30) return 290;
+
+    return Math.round(
+        basePrice(km)*0.38
+    );
+}
+
+function calculate(){
+
+    const km=parseFloat(
+        document.getElementById("km").value
+    );
+
+    if(!km || km<=0){
+        alert("請輸入實際配送距離");
+        return;
+    }
+
+    let base=basePrice(km);
+
+    let extra=0;
+
+    const goods=
+        document.getElementById("goods").value;
+
+    if(goods==="large")
+        extra+=100;
+
+    if(goods==="heavy")
+        extra+=200;
+
+    if(document.getElementById("night").checked)
+        extra+=50;
+
+    if(document.getElementById("rain").checked)
+        extra+=50;
+
+    if(document.getElementById("waiting").checked)
+        extra+=50;
+
+    if(document.getElementById("buying").checked)
+        extra+=100;
+
+    const customer=base+extra;
+
+    let driver=driverPrice(km);
+
+    /*
+    特殊貨物增加司機收入
+    */
+
+    if(goods==="large")
+        driver+=50;
+
+    if(goods==="heavy")
+        driver+=100;
+
+    /*
+    平台收入
+    */
+
+    const platform=customer-driver;
+
+    /*
+    毛利率
+    */
+
+    const margin=
+        ((platform/customer)*100).toFixed(1);
+
+    document.getElementById("result").style.display="block";
+
+    document.getElementById("customer").innerText=
+        "$"+customer;
+
+    document.getElementById("showKm").innerText=
+        km.toFixed(1)+" km";
+
+    document.getElementById("base").innerText=
+        "$"+base;
+
+    document.getElementById("extra").innerText=
+        "$"+extra;
+
+    document.getElementById("driver").innerText=
+        "$"+driver;
+
+    document.getElementById("platform").innerText=
+        "$"+platform;
+
+    document.getElementById("margin").innerText=
+        margin+"%";
+}
+
+function copyQuote(){
+
+    const start=
+        document.getElementById("start").value;
+
+    const end=
+        document.getElementById("end").value;
+
+    const km=
+        document.getElementById("showKm").innerText;
+
+    const customer=
+        document.getElementById("customer").innerText;
+
+    const driver=
+        document.getElementById("driver").innerText;
+
+    const text=
+`🟠 跑跑幫正式配送報價
+
+📍 出發地：${start}
+📍 目的地：${end}
+
+🛣️ 配送距離：${km}
+
+💰 客戶應付：${customer}
+
+🚗 司機所得：${driver}
+
+※ 以上為跑跑幫系統正式計算結果。`;
+
+    navigator.clipboard.writeText(text)
+    .then(()=>{
+        alert("正式報價已複製！");
+    })
+    .catch(()=>{
+        alert("複製失敗");
+    });
+}
+
+</script>
+
+</body>
+</html>
