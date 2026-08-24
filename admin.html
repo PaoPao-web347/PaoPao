@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跑跑幫｜司機收入預估</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#f5f5f5;
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif;
+}
+
+.container{
+    max-width:500px;
+    margin:auto;
+    padding:20px;
+}
+
+.header{
+    background:#222;
+    color:white;
+    text-align:center;
+    padding:25px;
+    border-radius:20px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    margin-top:15px;
+    border-radius:18px;
+    box-shadow:0 3px 12px rgba(0,0,0,.08);
+}
+
+label{
+    display:block;
+    font-weight:bold;
+    margin:12px 0 7px;
+}
+
+input,select{
+    width:100%;
+    padding:13px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    font-size:16px;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    margin-top:15px;
+    border:0;
+    border-radius:12px;
+    background:#ff7800;
+    color:white;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.result{
+    display:none;
+}
+
+.income{
+    text-align:center;
+    background:#f4f4f4;
+    padding:25px;
+    border-radius:15px;
+}
+
+.income small{
+    display:block;
+}
+
+.income strong{
+    display:block;
+    font-size:42px;
+    margin-top:8px;
+    color:#ff7800;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid #eee;
+}
+
+.note{
+    font-size:13px;
+    color:#777;
+    line-height:1.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+    <h1>🚗 跑跑幫</h1>
+    <p>司機收入預估</p>
+</div>
+
+<div class="card">
+
+<label>📍 出發地</label>
+<input id="start" placeholder="例如：桃園八德">
+
+<label>📍 目的地</label>
+<input id="end" placeholder="例如：桃園龜山">
+
+<label>🛣️ 配送距離（公里）</label>
+<input id="km" type="number" min="0" step="0.1" placeholder="例如：12.6">
+
+<label>📦 貨物類型</label>
+
+<select id="goods">
+<option value="normal">一般貨物</option>
+<option value="large">大型貨物</option>
+<option value="heavy">重型／特殊貨物</option>
+</select>
+
+<button onclick="calculate()">
+查看預估收入
+</button>
+
+</div>
+
+<div class="card result" id="result">
+
+<div class="income">
+
+<small>預估司機所得</small>
+
+<strong id="driver">$0</strong>
+
+</div>
+
+<div class="row">
+<span>配送距離</span>
+<strong id="showKm">0 km</strong>
+</div>
+
+<div class="row">
+<span>貨物類型</span>
+<strong id="showGoods">一般</strong>
+</div>
+
+<p class="note">
+※ 本金額為司機收入預估。<br>
+※ 實際司機所得以跑跑幫最終派單價格為準。<br>
+※ 夜間、特殊貨物、特殊路線等訂單，實際金額可能不同。
+</p>
+
+</div>
+
+</div>
+
+<script>
+
+function driverPrice(km){
+
+    if(km <= 3) return 70;
+    if(km <= 5) return 90;
+    if(km <= 8) return 110;
+    if(km <= 10) return 130;
+    if(km <= 15) return 170;
+    if(km <= 20) return 210;
+    if(km <= 25) return 250;
+    if(km <= 30) return 290;
+
+    return Math.round(
+        (750 + Math.ceil(km - 30)*25) * 0.38
+    );
+}
+
+function calculate(){
+
+    const km=parseFloat(
+        document.getElementById("km").value
+    );
+
+    if(!km || km<=0){
+        alert("請輸入配送距離");
+        return;
+    }
+
+    let driver=driverPrice(km);
+
+    const goods=document.getElementById("goods").value;
+
+    /*
+    大型、重型貨物
+    司機增加部分收入
+    */
+
+    if(goods==="large")
+        driver+=50;
+
+    if(goods==="heavy")
+        driver+=100;
+
+    document.getElementById("result").style.display="block";
+
+    document.getElementById("driver").innerText=
+        "$"+driver;
+
+    document.getElementById("showKm").innerText=
+        km.toFixed(1)+" km";
+
+    let goodsText="一般貨物";
+
+    if(goods==="large")
+        goodsText="大型貨物";
+
+    if(goods==="heavy")
+        goodsText="重型／特殊貨物";
+
+    document.getElementById("showGoods").innerText=
+        goodsText;
+}
+
+</script>
+
+</body>
+</html>
